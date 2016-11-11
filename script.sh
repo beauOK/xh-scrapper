@@ -1,0 +1,2 @@
+node scrap
+node fillNullBytes

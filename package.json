@@ -1,0 +1,24 @@
+{
+  "name": "xhscrapper",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "pretest": "jsdoc ./",
+    "test": "node ./download-test.js",
+    "start": "bash script.sh"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bluebird": "^3.3.4",
+    "cheerio": "^0.20.0",
+    "express": "^4.13.4",
+    "moment": "^2.12.0",
+    "mysql": "^2.10.2",
+    "request": "^2.69.0",
+    "sequelize": "^3.20.0",
+    "validator": "^5.1.0",
+    "vantage": "^1.6.0"
+  }
+}
