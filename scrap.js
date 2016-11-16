@@ -1,5 +1,11 @@
 'use strict';
 
+var debug = (function(debug){
+	var d = debug('scrapper')
+	d.video = debug('scrapper:video')
+	return d
+})(require('debug'))
+
 var XH = require('./xh');
 var xh = new XH();
 
@@ -20,7 +26,7 @@ function linksToDBModels(links){
 		return Video.create({
 			url : link
 		}).then(function(instance){
-			console.log('Created', instance.url);
+			debug.video('Created', instance.url);
 			return instance;
 		}).catch(function(err, arg2){
 			if (err.name == 'SequelizeUniqueConstraintError') {
@@ -62,10 +68,10 @@ function scrapNumber(index){
 	var url = urls[index].url;
 	var selector = urls[index].selector;
 
-	console.log('scrapping', index, urls[index]);
+	debug('scrapping #%d %s', index, urls[index].url)
 	return xh.scrap( url, selector ).then(onScrap).finally(function(){
 		var next = index + 1;
-		console.log('scrapped', url, 'next', next);
+		debug('scrapped %s', url)
 		return scrapNumber(next);
 	});
 }

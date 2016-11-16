@@ -1,3 +1,10 @@
+var debug = (function(debug){
+	var d = debug('filler')
+	d.video = debug('filler:video')
+	return d
+})(require('debug'))
+
+
 var Promise = require('bluebird');
 var sequelize = require('./sequelize');
 var Download = require('./download');
@@ -9,7 +16,6 @@ var Video = sequelize.models.Video;
 
 
 function fillNullBytes(){
-	console.time('fillNullBytes')
 	xh.findOne({
 		where : {
 			completed : false,
@@ -24,14 +30,12 @@ function fillNullBytes(){
 
 
 		var dld = new Download();
-		console.log('HEAD', video.url, video.file);
+		debug.video('URL %s', video.url)
 		return dld.url( video.file ).info().then(function(info){
 			video.bytes = info['content-length'];
 
-			console.log(video.url, (video.bytes/1000000).toFixed(2), 'MB');
-			console.log('##########################################');
-			console.log('##########################################');
-			console.log('                                          ');
+			debug.video('%s MB', (video.bytes/1000000).toFixed(2))
+			console.log()
 			return video.save();
 		});
 
@@ -39,12 +43,9 @@ function fillNullBytes(){
 		console.error('ERROR', err)
 		throw err
 	}).finally(function(){
-		console.timeEnd('fillNullBytes')
 		return new Promise(function(resolve, reject){
-			console.time('wait')
 			setTimeout(function(){
 				resolve(fillNullBytes())
-				console.timeEnd('wait')
 			}, 1000)
 		})
 	});

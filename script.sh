@@ -1,2 +1,2 @@
-node scrap
-node fillNullBytes
+DEBUG=scrap* node scrap
+DEBUG=filler* node fillNullBytes

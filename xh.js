@@ -1,3 +1,5 @@
+var debug = require('debug')('XHamster')
+
 var fs = require('fs');
 var validator = require('validator');
 var request = require('request');
@@ -25,19 +27,15 @@ function XHamster(){
 				
 				case 1:
 				return 'div.videoList div.video';
-				break;
 				
 				case 'top':
 				return 'div.videoList div.video';
-				break;
 
 				case 'user':
 				return 'div.video';
-				break;
 				
 				default:
 				return 'div.videoList > div.video';
-				break;
 			}
 
 		})(_selector);
@@ -123,7 +121,7 @@ function XHamster(){
 
 			if (!instance) { return Promise.reject(new Error('NO_NULL_VIDEO')); }
 
-			console.info('xh.video', instance.url);
+			debug(instance.url);
 			return video( instance.url ).catch(function(err){
 				if (err.message === 'URL_NO_VIDEO') {
 					instance.aborted = true;
