@@ -12,7 +12,7 @@ var Download = require('./download');
 var XH = require('./xh');
 var xh = new XH();
 
-var Video = sequelize.models.Video;
+var Video = sequelize.model('Video');
 
 
 function fillNullBytes(){
@@ -24,10 +24,11 @@ function fillNullBytes(){
 		}
 	}).catch(function(err){
 		if (err.message === 'NO_NULL_VIDEO') { process.exit(0); }
-		console.error(err);
+		console.log(err)
+		throw err
 	}).then(function(video){
-		if (!video) { return null; }
 
+		if (!video) { return null; }
 
 		var dld = new Download();
 		debug.video('URL %s', video.url)
@@ -37,6 +38,9 @@ function fillNullBytes(){
 			debug.video('%s MB', (video.bytes/1000000).toFixed(2))
 			console.log()
 			return video.save();
+		}).catch(function(err){
+			console.error('ERROR', 'dld.url', err)
+			throw err
 		});
 
 	}).catch(function(err){
