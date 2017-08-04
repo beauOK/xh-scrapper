@@ -76,6 +76,9 @@ var current_video = null;
 
 	Video.findOne({
 		where : {
+			id : {
+				$ne : 20683
+			},
 			completed : false,
 			aborted : false,
 			bytes : {
