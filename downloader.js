@@ -3,7 +3,8 @@ var util = require('util');
 var fs = require('fs');
 
 
-
+var store = require('./store')
+var dispatch = store.dispatch
 
 
 
@@ -24,53 +25,9 @@ setTimeout(function(){
 
 var current_video = null;
 
-(function VantageConfig(){
-	
-	var vantage = require('vantage')();
-	vantage.command('skip').description('Aborts current download.').action(function(args, callback){
-		current_video.aborted = true;
-		current_video.save().then(function(){
-			callback();
-			process.exit(0);
-		});
-	});
-	vantage.command('current').description('Shows current download.').action(function(args, callback){
-		this.log(current_video.url);
-		callback();
-	});
-	vantage.command('abort <query>').description('Abort like.').action(function(args, callback){
-		var self = this;
-		var options = {
-			where : {
-				url : { $like : '%'+args.query+'%' },
-				completed : false,
-				aborted : false
-			}
-		}
-		Video.update({
-			aborted : true
-		}, options).then(function(rs){
-			self.log(rs);
-			callback();
-		});
-	});
-	vantage.command('count <query>').description('Count like.').action(function(args, callback){
-		var self = this;
-		var options = {
-			where : {
-				url : { $like : '%'+args.query+'%' },
-				completed : false,
-				aborted : false
-			}
-		}
-		Video.findAll(options).then(function(videos){
-			self.log(videos.length);
-			callback();
-		});
-	});
-	vantage.delimiter('downloader~$').listen(4001);
 
-})();
+var v = require('./vantage');
+	
 
 (function main(){
 
@@ -91,6 +48,10 @@ var current_video = null;
 		if (!video) { util.log('No video to download.'); return Promise.reject('no video'); }
 		
 		util.log( video.url );
+		dispatch(store.startVideoDownload(video.url))
+		dispatch(store.set({
+			video: video.get()
+		}))
 
 		current_video = video;
 
@@ -115,9 +76,15 @@ var current_video = null;
 			title : title
 		})
 
-		if (!mp4) { return; }
+		if (!mp4) {
+			return video.update({
+				aborted:true
+			});
+		}
+		dispatch(store.set({ mp4 }))
 
 		var bytes_to_download = video.bytes;
+		var bytesDownloaded = 0
 
 		var dld = new Download();
 		dld.url( mp4 ).output( path.join('downloading', title) );
@@ -125,7 +92,9 @@ var current_video = null;
 		var show_progress = true;
 		dld.on('data', function(data){
 			bytes_to_download = bytes_to_download - data.length;
-
+			
+			dispatch(store.bytesDownloaded(data.length))
+			
 			if (show_progress) {
 				var progress = (100-((bytes_to_download * 100)/video.bytes));
 				console.log( progressBar((100-progress)/100) );
@@ -140,6 +109,7 @@ var current_video = null;
 			video.completed = true;
 			return video.save();
 		}).then(function(){
+			dispatch(store.downloadCompleted())
 			var old_name = path.join('./downloading', title);
 			var new_name = path.join('/mnt/sda1/home/public/asd/node', title);
 			return rename(old_name, new_name);
@@ -164,7 +134,7 @@ function rename(old_name, new_name){
 		old_file.pipe(new_file);
 		old_file.on('end', function(){
 			fs.utimesSync( new_name, Date.now(), mtime );
-			fs.unlink(old_name);
+			fs.unlink(old_name, ()=>{});
 			resolve(new_name);
 		});
 

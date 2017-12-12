@@ -85,6 +85,8 @@ var urls = [
 	.concat(genPages({ url: '/channels/top-alltime-bisexuals-:pageNumber.html', selector: 'top' }, 10))
 	.concat(genPages({ url: '/channels/top-alltime-cfnm-:pageNumber.html', selector: 'top' }, 3))
 	.concat(genPages({ url: '/channels/top-alltime-cuckold-:pageNumber.html', selector: 'top' }, 10))
+	.concat(genPages({ url: '/channels/top-alltime-hentai-:pageNumber.html', selector: 'top' }, 10))
+	.concat(genPages({ url: '/channels/top-alltime-vintage-:pageNumber.html', selector: 'top' }, 3))
 
 function genPages(data, q) {
 	var arr = []
