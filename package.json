@@ -17,6 +17,7 @@
     "debug": "^2.3.2",
     "express": "^4.13.4",
     "moment": "^2.12.0",
+    "node-fetch": "^1.7.3",
     "promise-queue": "^2.2.3",
     "redux": "^3.7.2",
     "request": "^2.69.0",

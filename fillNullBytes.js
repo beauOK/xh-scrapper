@@ -7,6 +7,7 @@ var debug = (function (debug) {
 
 var axios = require('axios')
 var Promise = require('bluebird');
+var fetch = require('node-fetch')
 var sequelize = require('./sequelize');
 var Download = require('./download');
 var { scrapVideoUrl } = require('./lib/index')
@@ -14,6 +15,7 @@ var { scrapVideoUrl } = require('./lib/index')
 var XH = require('./xh');
 var xh = new XH();
 
+sequelize.options.logging = null
 var Video = sequelize.model('Video');
 
 function getAVideo() {
@@ -27,6 +29,14 @@ function getAVideo() {
 }
 
 async function main() {
+	var total = await Video.all({
+		where: {
+			completed: false,
+			aborted: false,
+			bytes: null
+		}
+	}).then(videos => videos.length)
+
 	var run = true
 	while (run) {
 		var video = await Video.findOne({
@@ -37,53 +47,33 @@ async function main() {
 			}
 		})
 		if (!video) return
+		debug('video found', video.id)
+
 		var videoSource = await scrapVideoUrl(video.url)
 		if (!videoSource) {
 			video.aborted = true
-			await video.save()
+		} else {
+			debug('video url', videoSource)
+			try {
+				var bytes = await getContentLength(videoSource)
+				debug('video size', bytes)
+				video.bytes = bytes
+			} catch (err) {
+				video.aborted = true
+			}
 		}
-		var response = await axios.head(videoSource)
-		var meta = response.headers
+		await video.save()
+		
+		total--
+		console.log('videos left', total)
 	}
+}
+
+async function getContentLength(url) {
+	var response = await fetch(url, { method: 'HEAD' })
+	return +response.headers.get('content-length')
 }
 
 main().catch(err => {
 	console.log(err)
 })
-
-function fillNullBytes() {
-	getAVideo().catch(function (err) {
-		if (err.message === 'NO_NULL_VIDEO') { process.exit(0); }
-		console.log(err)
-		throw err
-	}).then(function (video) {
-
-		if (!video) {
-			return null;
-		}
-
-		var dld = new Download();
-		debug.video('URL %s', video.url)
-		return dld.url(video.file).info().then(function (info) {
-			video.bytes = info['content-length'];
-
-			debug.video('%s MB', (video.bytes / 1000000).toFixed(2))
-			console.log()
-			return video.save();
-		}).catch(function (err) {
-			console.error('ERROR', 'dld.url', err)
-			throw err
-		});
-
-	}).catch(function (err) {
-		console.error('ERROR', err)
-		throw err
-	}).finally(function () {
-		return new Promise(function (resolve, reject) {
-			setTimeout(function () {
-				resolve(fillNullBytes())
-			}, 1000)
-		})
-	});
-}
-//fillNullBytes();
