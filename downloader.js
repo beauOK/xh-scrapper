@@ -2,16 +2,11 @@ var path = require('path');
 var util = require('util');
 var fs = require('fs');
 
-
 var store = require('./store')
 var dispatch = store.dispatch
 
-
-
 var Download = require('./download');
 var sequelize = require('./sequelize');
-
-
 
 var Video = sequelize.model('Video');
 
@@ -22,12 +17,9 @@ setTimeout(function(){
 	process.exit(0);
 }, 1000 * 60 * 60 * 2);
 
-
 var current_video = null;
 
-
 var v = require('./vantage');
-	
 
 (function main(){
 
