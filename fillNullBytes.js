@@ -1,34 +1,28 @@
+var axios = require('axios')
+var fetch = require('node-fetch')
+
 var debug = (function (debug) {
 	var d = debug('filler')
 	d.video = debug('filler:video')
 	return d
 })(require('debug'))
 
-
-var axios = require('axios')
-var Promise = require('bluebird');
-var fetch = require('node-fetch')
-var sequelize = require('./sequelize');
-var Download = require('./download');
-var { scrapVideoUrl } = require('./lib/index')
+var sequelize = require('./sequelize')
+var Download = require('./download')
+var { scrapVideoUrl } = require('./lib')
 
 var XH = require('./xh');
 var xh = new XH();
 
-sequelize.options.logging = null
 var Video = sequelize.model('Video');
 
-function getAVideo() {
-	return xh.findOne({
-		where: {
-			completed: false,
-			aborted: false,
-			bytes: null
-		}
-	})
+async function getContentLength(url) {
+	var response = await fetch(url, { method: 'HEAD' })
+	return +response.headers.get('content-length')
 }
 
 async function main() {
+
 	var total = await Video.all({
 		where: {
 			completed: false,
@@ -36,6 +30,8 @@ async function main() {
 			bytes: null
 		}
 	}).then(videos => videos.length)
+
+	console.log('found', total)
 
 	var run = true
 	while (run) {
@@ -67,11 +63,7 @@ async function main() {
 		total--
 		console.log('videos left', total)
 	}
-}
 
-async function getContentLength(url) {
-	var response = await fetch(url, { method: 'HEAD' })
-	return +response.headers.get('content-length')
 }
 
 main().catch(err => {
